@@ -36,7 +36,7 @@ class Contourizer:
         r, c = img.shape
         kr, kc = kernel.shape
         padded = np.zeros((r + kr, c + kc), dtype=img.dtype)
-        insert = np.uint((kr)/2)
+        insert = kr // 2
         padded[insert: insert + r, insert: insert + c] = img
         return padded
 
@@ -50,8 +50,8 @@ class Contourizer:
         image_padded = self.pad(img, mask)
         for x in range(img.shape[0]):
             for y in range(img.shape[1]):
-                output[x, y] = (mask * image_padded[x:x+i,
-                                                    y:y+j]).sum() / mask.sum()
+                output[x, y] = (mask * image_padded[x:x + i,
+                                                    y:y + j]).sum() / mask.sum()
         return output
 
     def apply_mask(self, image, kernel):
@@ -61,7 +61,7 @@ class Contourizer:
         image_padded = self.pad(image, kernel)
         for x in range(image.shape[0]):
             for y in range(image.shape[1]):
-                output[x, y] = (kernel * image_padded[x:x+i, y:y+j]).sum()
+                output[x, y] = (kernel * image_padded[x:x + i, y:y + j]).sum()
         return output
 
     def gradient_magnitude(self, fx, fy):
@@ -88,8 +88,8 @@ class Contourizer:
         img = self.smooth(img, self.gauss)
         fx = self.apply_mask(img, self.gx)
         fy = self.apply_mask(img, self.gy)
-        mag = Image.fromarray(
-            self.gradient_magnitude(fx, fy).astype(int)).convert('RGB')
+        mag_img = self.gradient_magnitude(fx, fy)
+        mag = Image.fromarray(mag_img).convert("RGB")
         mag = ImageEnhance.Contrast(mag).enhance(enhance_rate)
         if invert:
             mag = ImageOps.invert(mag)
