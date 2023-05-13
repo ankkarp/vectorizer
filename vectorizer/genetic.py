@@ -62,17 +62,47 @@ class SVG:
     def __init__(self,
                  contourizer: Contourizer = Contourizer(),
                  mutation_rate=0.1,
-                 n_buffer=100):
+                 n_buffer=100,
+                 n_agents=10,
+                 seed=None,
+                 gain=0.1,
+                 max_epochs=1000,
+                 resroot=None,
+                 fitness_method='dice',
+                 mode='genetic',
+                 drop_duplicates=True):
         """
         Векторизатор изображений
 
         Параметры:
             contourizer (Contourizer, optional): Объект векторизатора. По умолчанию Contourizer().
         """
+        random.seed(seed)
+        assert mode in ['genetic', 'evolution'], "ERROR: Unknown mode!"
         self.contourizer = contourizer
-        self.mutation_rate = mutation_rate
+        self.mutation_rate = 1 if mode == 'evolution' else mutation_rate
         self.code = '<svg width="{w}" height="{h}">{x}</svg>'
         self.n_buffer = n_buffer
+        self.mode = mode
+        self.n_agents = n_agents
+        self.gain = gain
+        self.max_epochs = max_epochs
+        self.resroot = resroot
+        self.fitness_method = fitness_method
+        self.drop_duplicates = drop_duplicates
+        i = 0
+        if self.resroot:
+            while True:
+                resdir = f'{self.mode}_{self.fitness_method}{i}'
+                if resdir not in os.listdir(self.resroot):
+                    break
+                i += 1
+            self.resdir = os.path.join(self.resroot, resdir)
+            self.tempdir = os.path.join(self.resdir, 'temp')
+            n_digits = int(np.ceil(np.log10(self.max_epochs + 1)))
+            self.img_template = f'{self.tempdir}/%0{n_digits}d.png'
+            self.text_template = f'%0{n_digits}d: %d.png'
+            os.makedirs(self.tempdir, exist_ok=False)
 
     def assess_fitness(self, agent, method='dice'):
         svg_code = self.get_svg([agent], colors=['black'])
@@ -130,14 +160,7 @@ class SVG:
         shutil.rmtree(f'{self.tempdir}')
 
     def __call__(self, img: Union[str, np.ndarray],
-                 n_agents=10,
-                 seed=None,
-                 gain=0.1,
-                 max_epochs=1000,
-                 resroot=None,
-                 outfile='result.svg',
-                 fitness_method='dice',
-                 preserve_dublicates=False) -> None:
+                 outfile: str = 'result.svg') -> None:
         """
         Преобразовать картинку в SVG-код
 
@@ -147,44 +170,29 @@ class SVG:
             seed (int): Ядро рандомизатора чисел. По умолчанию случайное
             n_epochs (int): Кол-во эпох. По умолчанию 1000
         """
-        i = 0
-        if resroot:
-            while True:
-                resdir = f'{fitness_method}{i}'
-                if resdir not in os.listdir(resroot):
-                    break
-                i += 1
-            self.resdir = os.path.join(resroot, resdir)
-            self.tempdir = os.path.join(self.resdir, 'temp')
-            n_digits = int(np.ceil(np.log10(max_epochs + 1)))
-            self.img_template = f'{self.tempdir}/%0{n_digits}d.png'
-            self.text_template = f'%0{n_digits}d: %d.png'
-            os.makedirs(self.tempdir, exist_ok=False)
-        random.seed(seed)
         pil_img = self.contourizer.contour(img, invert=True)
-        pil_img.save(os.path.join(self.resdir, f'contour.png'))
+        if self.resroot:
+            pil_img.save(os.path.join(self.resdir, f'contour.png'))
         self.img = np.array(pil_img.convert("L"))
         self.flat_img = self.img.flatten()
         self.true_curve_idxs = np.where(self.flat_img < 127)[0]
         self.true_curve_n = len(self.true_curve_idxs)
         self.h, self.w = self.img.shape
         self.population = [PathAgent(xmax=self.h, ymax=self.w)
-                           for _ in range(n_agents)]
+                           for _ in range(self.n_agents)]
         self.n_pixels = np.prod(self.img.shape)
-        n_agents_halfed = n_agents // 2
+        n_agents_halfed = self.n_agents // 2
         fitness_buffer = []
-        n_best = int(n_agents * gain)
-        for i in tqdm(range(max_epochs)):
+        n_best = int(self.n_agents * self.gain)
+        for i in tqdm(range(self.max_epochs)):
             for agent in self.population:
-                self.assess_fitness(agent, fitness_method)
-            if self.resdir:
+                self.assess_fitness(agent, self.fitness_method)
+            if self.resroot:
                 self.visualize(i, n=n_best)
             self.population.sort(key=lambda x: x.fitness)
             if self.population[0].fitness <= 0:
                 break
-            if preserve_dublicates:
-                new_generation = self.population[:n_best]
-            else:
+            if self.drop_duplicates:
                 j = 0
                 new_generation = []
                 new_generation_paths = set()
@@ -194,7 +202,9 @@ class SVG:
                         new_generation_paths.add(current_agent_path)
                         new_generation.append(self.population[j])
                     j += 1
-            n_children = int(n_agents - n_best)
+            else:
+                new_generation = self.population[:n_best]
+            n_children = int(self.n_agents - n_best)
             fitness_buffer.insert(0, self.population[0].fitness)
             if len(fitness_buffer) > self.n_buffer:
                 fitness_buffer.pop()
@@ -210,7 +220,7 @@ class SVG:
         print("Generation: {}\tChromosome: {}\tFitness: {}".
               format(i, self.population[0].chromosome,
                      self.population[0].fitness))
-        if resroot:
+        if self.resroot:
             self.makegif()
             self.export_svg(os.path.join(self.resdir, outfile))
         else:
