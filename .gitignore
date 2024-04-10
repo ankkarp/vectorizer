@@ -1,2 +1,6 @@
 .venv
-*.pdf
+__pycache__
+*.png
+*.svg
+*.gif
+.vscode
