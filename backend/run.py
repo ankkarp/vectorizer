@@ -1,87 +1,45 @@
 import os
-import datetime
+import time
+import chardet
 
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-import pandas as pd
-import numpy as np
-import logging
+import uvicorn
+from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 
-# from starlette.exceptions import HTTPException as StarletteHTTPException
-
-load_dotenv()
-
-logging.basicConfig(level=logging.DEBUG)
-# logger = logging.getLogger(__name__)
+from vectorizer.genetic import SVG
+from contour import Contourizer
 
 
 app = FastAPI()
 
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"], # Allows all origins
+#     allow_credentials=True,
+#     allow_methods=["*"], # Allows all methods
+#     allow_headers=["*"], # Allows all headers
+# )
 
-@app.get("/data")
-async def get_all():
-    df = pd.read_sql(text(f'SELECT * FROM sportobjects'), con)
-    return df.astype(str).to_dict('records')
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
-
-@app.get("/ids")
-async def read_object():
-    df = pd.read_sql(text(f'SELECT id FROM sportobjects'), con)
-    return df.to_dict()
-
-
-@app.get("/id/{id}")
-async def read_object(id: int):
-    object_df = pd.read_sql(
-        text(f'SELECT * FROM sportobjects WHERE id = {id}'), con).iloc[0]
-    return object_df.to_dict()
-
-
-# @app.get("/stats/sports")
-# async def get_sports():
-#     df = pd.read_sql(
-#         text(f'''SELECT kinds_of_sports FROM sportobjects'''), con).astype(str)
-#     sports = np.hstack(df['kinds_of_sports'].str.split(', ').values)
-#     return pd.Series(sports).value_counts().to_dict()
-
-@app.get("/stats/timetable")
-async def get_sports():
-    df = pd.read_sql(
-        text(f'''SELECT start_date_of_construction_reconstruction
-             FROM sportobjects'''), con)
-    return df.str.replace(r'.+\.', '').value_counts().to_dict()
+@app.post("/upload")
+async def upload(image: UploadFile = File(...)):
+    # Save the received image to a file
+    with open("received_image.jpg", "wb") as file:
+        file.write(image.file.read())
+    contour = Contourizer()
+    svg = SVG(contour, n_buffer=100, mutation_rate=0.2, resroot='results', n_agents=100, max_epochs=10)
+    svg("received_image.jpg")
+    svg_path = os.path.join(svg.resdir, 'result.svg')
+    with open(svg_path, 'r+') as f:
+        svg_content = f.read()
+    # Return a different image as the response
+    return {'image': svg_content}
 
 
-@app.get("/locs")
-async def get_locs():
-    df = pd.read_sql(
-        text(f'''SELECT COALESCE(yandex_object_coordinate_x, yandex_coordinate_center_x) as x,
-             COALESCE(yandex_object_coordinate_y, yandex_y_center_coordinate) as y
-             FROM sportobjects'''), con).dropna()
-    return df.to_dict('records')
-
-
-@app.get("/stats/{stat}")
-async def get_statistic(stat):
-    if stat == 'funding':
-        df = pd.read_sql(text(f'''SELECT funding_from_the_federal_budget,
-                    funding_from_the_budget_of_the_subject_of_the_federation,
-                    funding_from_the_budget_of_the_municipality,
-                    funding_from_extrabudgetary_sources
-                    FROM sportobjects'''), con)
-        return {col: df[col].sum(skipna=True) for col in df.columns}
-    elif stat in pd.read_sql(text('SELECT * FROM sportobjects LIMIT 1'), con).columns:
-        df = pd.read_sql(
-            text(f'SELECT {stat} FROM sportobjects'), con).fillna("Не указано")
-        data = df[stat].value_counts(dropna=False).to_dict()
-        return data
-    else:
-        raise HTTPException(
-            status_code=404,
-            detail="Page not found",
-            headers={"X-Error": f"Endpoint {stat} doesn't exit"},
-        )
-
-
-# @app.get()s
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

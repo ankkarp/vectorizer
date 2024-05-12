@@ -1,0 +1,10 @@
+.container{
+    opacity: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.container.active{
+    opacity: 1;
+    transition: opacity .5s;
+}

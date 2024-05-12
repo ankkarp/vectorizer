@@ -92,6 +92,8 @@ class SVG:
         self.drop_duplicates = drop_duplicates
         i = 0
         if self.resroot:
+            if not os.path.exists(self.resroot):
+                os.mkdir(self.resroot)
             while True:
                 resdir = f'{self.mode}_{self.fitness_method}{i}'
                 if resdir not in os.listdir(self.resroot):
