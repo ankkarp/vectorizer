@@ -32,7 +32,7 @@ async def upload(image: UploadFile = File(...)):
     with open("received_image.jpg", "wb") as file:
         file.write(image.file.read())
     contour = Contourizer()
-    svg = SVG(contour, n_buffer=100, mutation_rate=0.2, resroot='results', n_agents=100, max_epochs=10)
+    svg = SVG(contour, n_buffer=100, mutation_rate=0.2, resroot='results', n_agents=10, max_epochs=10)
     svg("received_image.jpg")
     svg_path = os.path.join(svg.resdir, 'result.svg')
     with open(svg_path, 'r+') as f:

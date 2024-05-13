@@ -37,7 +37,18 @@
     height: 100%;
     font-family: 'Courier New', Courier, monospace;
     font-size: large;
-    color: var(--accent-clr)
+    color: var(--accent-clr);
+}
+
+.shadow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    overflow: hidden;
+    border-radius: 10%;
+    background-color: rgba(22, 22, 57, 0.478);
+    z-index: 9;
 }
 
 .container video {

@@ -81,8 +81,8 @@
 
 
 :root {
-  --accent-clr: #BA9D5A;
-  --background-clr: #001424;
+  --accent-clr: #f54d2c;
+  --background-clr: #080d24;
   --font-mono: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono',
   'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro',
   'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;

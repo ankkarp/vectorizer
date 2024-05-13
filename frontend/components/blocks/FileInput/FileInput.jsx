@@ -7,28 +7,30 @@ import Router from "next/router";
 import LoadingIcon from "../../icons/LoadingIcon/LoadingIcon";
 import Image from "next/image";
 
-export default function FileInput() {
+export default function FileInput({ setSvgCode, setProgressGif }) {
   const [loading, setLoading] = useState(false);
-  const [resultImage, setResultImage] = useState(null)
+  const [inputImageURL, setInputImageURL] = useState(null);
   const inputRef = useRef();
 
-  const updateResults = (r) => {
-    setResultImage(r.data.image)
+  const updateResults = (svgCode) => {
+    setSvgCode(svgCode);
+    setLoading(false);
   };
-
 
   const handleFileChange = (e) => {
     e.preventDefault();
     const file = e.target.files[0];
+    setInputImageURL(URL.createObjectURL(file));
     let formData = new FormData();
     formData.append("image", file);
     try {
-      http.post("upload", formData, {
+      http
+        .post("upload", formData, {
           headers: {
             "Content-Type": file.type,
           },
         })
-        .then((r) => setResultImage(r.data.image));
+        .then((r) => updateResults(r.data.image));
       setLoading(true);
     } catch (e) {
       console.log(e);
@@ -57,7 +59,21 @@ export default function FileInput() {
             <div className="footer">Загрузите изображение</div>
           </button>
         )}
-        {resultImage&&resultImage}
+        {inputImageURL && (
+          <>
+            <div className={styles.shadow} />
+            <Image
+              src={inputImageURL}
+              alt="Загруженное изображение"
+              fill={true}
+              style={{
+                objectFit: "cover",
+                overflow: "hidden",
+                borderRadius: "10%",
+              }}
+            />
+          </>
+        )}
       </div>
     </div>
   );
