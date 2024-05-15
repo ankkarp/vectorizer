@@ -6,10 +6,17 @@ import http from "../../../api/http-common";
 import Router from "next/router";
 import LoadingIcon from "../../icons/LoadingIcon/LoadingIcon";
 import Image from "next/image";
+import Slider from "@mui/material/Slider";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 
 export default function FileInput({ setSvgCode, setProgressGif }) {
   const [loading, setLoading] = useState(false);
   const [inputImageURL, setInputImageURL] = useState(null);
+  const [contourImageURL, setContourImageURL] = useState(null);
+  const [file, setFile] = useState(null);
+  const [epochs, setEpochs] = useState(100);
   const inputRef = useRef();
 
   const updateResults = (svgCode) => {
@@ -18,9 +25,17 @@ export default function FileInput({ setSvgCode, setProgressGif }) {
   };
 
   const handleFileChange = (e) => {
-    e.preventDefault();
-    const file = e.target.files[0];
-    setInputImageURL(URL.createObjectURL(file));
+    setFile(e.target.files[0]);
+    console.log(typeof e.target.files[0]);
+    setInputImageURL(URL.createObjectURL(e.target.files[0]));
+  };
+
+  const handleClear = (e) => {
+    setFile(null);
+    setInputImageURL(null);
+  };
+
+  const handleSubmit = () => {
     let formData = new FormData();
     formData.append("image", file);
     try {
@@ -47,17 +62,19 @@ export default function FileInput({ setSvgCode, setProgressGif }) {
         {loading ? (
           <LoadingIcon />
         ) : (
-          <button onClick={handleChoose}>
-            <input
-              ref={inputRef}
-              type="file"
-              onChange={handleFileChange}
-              disabled={loading}
-              accept=".png,.jpeg,.jpg"
-            />
-            <UploadIcon width={200} height={200} />
-            <div className="footer">Загрузите изображение</div>
-          </button>
+          !inputImageURL && (
+            <button onClick={handleChoose}>
+              <input
+                ref={inputRef}
+                type="file"
+                onChange={handleFileChange}
+                disabled={loading}
+                accept=".png,.jpeg,.jpg"
+              />
+              <UploadIcon width={200} height={200} />
+              <div className="footer">Загрузите изображение</div>
+            </button>
+          )
         )}
         {inputImageURL && (
           <>
@@ -75,6 +92,36 @@ export default function FileInput({ setSvgCode, setProgressGif }) {
           </>
         )}
       </div>
+      <div className={styles.epoch}>
+        <p>Кол-во эпох</p>
+        <Slider
+          aria-label="Кол-во эпох"
+          defaultValue={100}
+          valueLabelDisplay="auto"
+          shiftStep={30}
+          step={100}
+          marks
+          min={100}
+          max={1000}
+          // disabled={loading}
+          onChange={(_, newValue) => {
+            console.log(newValue);
+            console.log(typeof newValue);
+            setEpochs(newValue);
+          }}
+          color="warning"
+        />
+      </div>
+      {inputImageURL && (
+        <Stack direction="row" spacing={2}>
+          <Button onClick={handleSubmit} style={{ color: "var(--copy-clr)" }}>
+            Запустить
+          </Button>
+          <Button onClick={handleClear} style={{ color: "var(--copy-clr)" }}>
+            Очистить
+          </Button>
+        </Stack>
+      )}
     </div>
   );
 }

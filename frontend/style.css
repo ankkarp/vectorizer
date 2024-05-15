@@ -81,8 +81,20 @@
 
 
 :root {
-  --accent-clr: #f54d2c;
-  --background-clr: #080d24;
+  /* --result-clr: #bec8d1; */
+  --accent-clr: #f83416;
+  --text-clr: #eeeded;
+  --save-clr: #F5C12C;
+  --copy-clr: #1dadb8;
+  --background-clr: #2b2d32;
+  /* --accent-clr: #f54d2c;
+  --background-clr: #080d24; */
+  /* --result-clr: rgb(232, 170, 94); */
+  /* --result-clr: #213796; */
+  /* --background-clr:  	#373b3e */
+  /* --accent-clr: #963D21; */
+
+
   --font-mono: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono',
   'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro',
   'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;

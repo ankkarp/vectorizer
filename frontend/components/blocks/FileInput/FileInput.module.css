@@ -16,7 +16,7 @@
 }
 
 .upload {
-    width: clamp(500px, 500px, 90vw);
+    width: clamp(500px, 500px, 40vw);
     height: clamp(500px, 500px, 90vw);
     border: 1px var(--accent-clr) double;
     border-radius: 10%;
@@ -61,4 +61,14 @@
     min-height: 40px;
     line-height: 40px;
     text-align: center;
+}
+
+.epoch{
+    color: var(--text-clr);
+    width: 300px;
+    padding-bottom: 50px
+}
+
+.epoch p{
+    margin-bottom: 40px;
 }
