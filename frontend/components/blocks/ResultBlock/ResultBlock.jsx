@@ -6,7 +6,14 @@ import IconButton from "@mui/material/IconButton";
 import Save from "@mui/icons-material/SaveAlt";
 import ContentCopy from "@mui/icons-material/ContentCopy";
 import { Tooltip } from "@mui/material";
+import { withStyles } from "@mui/material/styles";
 import Image from "next/image";
+
+const muiStyle = {
+  input: {
+    color: "var(--text-clr)",
+  },
+};
 
 const ResultBlock = ({ svgCode, progressGif }) => {
   const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -44,12 +51,20 @@ const ResultBlock = ({ svgCode, progressGif }) => {
               disabled
               fullWidth
               sx={{
-                "& .MuiInputBase-input": {
-                  color: "var(--text-clr)", // Ensure the text color is white
-                  "-webkit-text-fill-color": "var(--text-clr)",
-                  paddingRight: "20px",
+                // input: {
+                //   color: "var(--text-clr)",
+                // },
+                "& .MuiInputBase-input.Mui-disabled": {
+                  WebkitTextFillColor: "var(--text-clr)", // Example color - choose your own
+                  "-webkit-opacity": 1, // Ensure consistent opacity across browsers
                 },
+                // "& .MuiInputBase-input": {
+                //   color: "var(--text-clr)", // Ensure the text color is white
+                //   "-webkit-text-fill-color": "var(--text-clr)",
+                //   paddingRight: "20px",
+                // },
                 "& .MuiInputBase-root.Mui-disabled": {
+                  // color: "var(--text-clr)",
                   "& fieldset": {
                     borderColor: "var(--text-clr)",
                   },
@@ -68,8 +83,9 @@ const ResultBlock = ({ svgCode, progressGif }) => {
               }}
               InputProps={{
                 style: {
-                  color: "#eeeded",
-                  width: "30vw",
+                  color: "var(--text-clr)",
+                  "-webkit-text-fill-color": "var(--text-clr)",
+                  // width: "30vw",
                 },
                 endAdornment: (
                   <InputAdornment position="end">
@@ -109,7 +125,7 @@ const ResultBlock = ({ svgCode, progressGif }) => {
               }}
               InputLabelProps={{
                 style: {
-                  color: "var(--result-clr)",
+                  color: "var(--text-clr)",
                 },
               }}
             />
