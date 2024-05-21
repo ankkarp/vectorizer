@@ -18,18 +18,24 @@ random.seed()
 
 
 class PathAgent:
-    def __init__(self, ymax: int, xmax: int, x0: int = None, xc0: int = None,
+    def __init__(self, ymax: int, xmax: int, init_coords: np.ndarray, x0: int = None, xc0: int = None,
                  x1: int = None, xc1: int = None, y0: int = None,
                  yc0: int = None, y1: int = None, yc1: int = None):
         self.xmax = xmax
         self.ymax = ymax
-        self.x0 = randint(0, xmax) if x0 is None else x0
+        self.init_coords = init_coords
+        coords_idxs = np.random.choice(np.arange(0, len(init_coords)), size=2, replace=False)
+        self.x0 = init_coords[coords_idxs[0]][0] if x0 is None else x0
+        self.y0 = init_coords[coords_idxs[0]][1] if x0 is None else y0
+        self.x1 = init_coords[coords_idxs[1]][0] if x1 is None else x1
+        self.y1 = init_coords[coords_idxs[1]][1] if x1 is None else y1
         self.xc0 = randint(0, xmax) if xc0 is None else xc0
-        self.x1 = randint(0, xmax) if x1 is None else x1
         self.xc1 = randint(0, xmax) if xc1 is None else xc1
-        self.y0 = randint(0, ymax) if y0 is None else y0
         self.yc0 = randint(0, ymax) if yc0 is None else yc0
-        self.y1 = randint(0, ymax) if y1 is None else y1
+        self.yc1 = randint(0, ymax) if yc1 is None else yc1
+        self.xc0 = randint(0, xmax) if xc0 is None else xc0
+        self.xc1 = randint(0, xmax) if xc1 is None else xc1
+        self.yc0 = randint(0, ymax) if yc0 is None else yc0
         self.yc1 = randint(0, ymax) if yc1 is None else yc1
         self.chromosome = {'x0': self.x0, 'xc0': self.xc0, 'x1': self.x1, 'xc1': self.xc1,
                            'y0': self.y0, 'yc0': self.yc0, 'y1': self.y1, 'yc1': self.yc1, }
@@ -45,9 +51,12 @@ class PathAgent:
         gene_keys = self.chromosome.keys()
         choices = np.random.choice(3, len(gene_keys), p=p)
         for k, chosen in zip(gene_keys, choices):
-            if chosen != 2:
+            if k not in ['y0', 'y1'] and chosen != 2:
                 child_chromosome[k] = gene_pool[chosen][k]
-        return PathAgent(ymax=self.ymax, xmax=self.xmax, **child_chromosome)
+                if len(k) == 2:
+                    y_k = k.replace('x', 'y')
+                    child_chromosome[y_k] = gene_pool[chosen][y_k]
+        return PathAgent(ymax=self.ymax, xmax=self.xmax, init_coords=self.init_coords, **child_chromosome)
 
     def get_path(self, c='black'):
         return self.path.format(x0=self.x0, x1=self.x1, xc0=self.xc0, xc1=self.xc1,
@@ -178,9 +187,10 @@ class SVG:
         self.img = np.array(pil_img.convert("L"))
         self.flat_img = self.img.flatten()
         self.true_curve_idxs = np.where(self.flat_img < 127)[0]
+        self.true_curve_idxs_unraveled = np.vstack(np.unravel_index(self.true_curve_idxs, self.img.shape)).T
         self.true_curve_n = len(self.true_curve_idxs)
         self.h, self.w = self.img.shape
-        self.population = [PathAgent(xmax=self.h, ymax=self.w)
+        self.population = [PathAgent(xmax=self.h, ymax=self.w, init_coords=self.true_curve_idxs_unraveled)
                            for _ in range(self.n_agents)]
         self.n_pixels = np.prod(self.img.shape)
         n_agents_halfed = self.n_agents // 2
