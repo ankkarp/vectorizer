@@ -9,24 +9,22 @@ import Image from "next/image";
 import Slider from "@mui/material/Slider";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 
-export default function FileInput({ setSvgCode, setProgressGif }) {
+export default function FileInput({ setSvgCode, setResDir }) {
   const [loading, setLoading] = useState(false);
   const [inputImageURL, setInputImageURL] = useState(null);
-  const [contourImageURL, setContourImageURL] = useState(null);
   const [file, setFile] = useState(null);
   const [epochs, setEpochs] = useState(100);
   const inputRef = useRef();
 
-  const updateResults = (svgCode) => {
+  const updateResults = (svgCode, resDir) => {
     setSvgCode(svgCode);
+    setResDir(resDir);
     setLoading(false);
   };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
-    console.log(typeof e.target.files[0]);
     setInputImageURL(URL.createObjectURL(e.target.files[0]));
   };
 
@@ -40,12 +38,12 @@ export default function FileInput({ setSvgCode, setProgressGif }) {
     formData.append("image", file);
     try {
       http
-        .post("upload", formData, {
+        .post(`upload/?max_epochs=${epochs}`, formData, {
           headers: {
             "Content-Type": file.type,
           },
         })
-        .then((r) => updateResults(r.data.image));
+        .then((r) => updateResults(r.data.image, r.data.resdir));
       setLoading(true);
     } catch (e) {
       console.log(e);

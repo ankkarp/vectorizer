@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./ResultBlock.module.css";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -8,6 +8,9 @@ import ContentCopy from "@mui/icons-material/ContentCopy";
 import { Tooltip } from "@mui/material";
 import { withStyles } from "@mui/material/styles";
 import Image from "next/image";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import http from "../../../api/http-common";
 
 const muiStyle = {
   input: {
@@ -15,8 +18,11 @@ const muiStyle = {
   },
 };
 
-const ResultBlock = ({ svgCode, progressGif }) => {
+const ResultBlock = ({ svgCode, resDir }) => {
   const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [contourURL, setContourURL] = useState(null);
+  const [gifURL, setGifURL] = useState(null);
+  const [svgImageURL, setSvgImageURL] = useState(null);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(svgCode).then(() => {
@@ -24,6 +30,45 @@ const ResultBlock = ({ svgCode, progressGif }) => {
       setTimeout(() => setTooltipOpen(false), 2000); // Hide tooltip after 2 seconds
     });
   };
+
+  const resultObjs = {
+    "Визуализация процесса": {
+      setter: (v) => setGifURL(v),
+      valueURL: gifURL,
+      endpoint: `process_gif/${resDir}`,
+      blobType: "image/gif",
+    },
+    Контур: {
+      setter: setContourURL,
+      valueURL: contourURL,
+      endpoint: `contour/${resDir}`,
+      blobType: "image/png",
+    },
+    // Результат: {
+    //   setter: setSvgImageURL,
+    //   valueURL: svgImageURL,
+    //   endpoint: "svg_image/{resdir}",
+    //   blobType: "image/png",
+    // },
+  };
+
+  useEffect(() => {
+    console.log(resDir);
+    if (resDir) {
+      Object.values(resultObjs).forEach((obj) => {
+        try {
+          http.get(obj.endpoint).then((r) => {
+            console.log(typeof r.data);
+            obj.setter(
+              URL.createObjectURL(new Blob([r.data], { type: obj.blobType }))
+            );
+          });
+        } catch (e) {
+          console.log(e);
+        }
+      });
+    }
+  }, [resDir]);
 
   const handleSaveAsSVG = () => {
     const blob = new Blob([svgCode], { type: "image/svg+xml" });
@@ -58,11 +103,11 @@ const ResultBlock = ({ svgCode, progressGif }) => {
                   WebkitTextFillColor: "var(--text-clr)", // Example color - choose your own
                   "-webkit-opacity": 1, // Ensure consistent opacity across browsers
                 },
-                // "& .MuiInputBase-input": {
-                //   color: "var(--text-clr)", // Ensure the text color is white
-                //   "-webkit-text-fill-color": "var(--text-clr)",
-                //   paddingRight: "20px",
-                // },
+                "& .MuiInputBase-input": {
+                  //   color: "var(--text-clr)", // Ensure the text color is white
+                  //   "-webkit-text-fill-color": "var(--text-clr)",
+                  paddingRight: "20px",
+                },
                 "& .MuiInputBase-root.Mui-disabled": {
                   // color: "var(--text-clr)",
                   "& fieldset": {
@@ -130,6 +175,22 @@ const ResultBlock = ({ svgCode, progressGif }) => {
               }}
             />
           </div>
+          {Object.entries(resultObjs).forEach(
+            (name, obj) =>
+              obj.valueURL && (
+                <Image
+                  src={obj.valueURL}
+                  alt={name}
+                  fill={true}
+                  style={{
+                    objectFit: "cover",
+                    overflow: "hidden",
+                    borderRadius: "10%",
+                  }}
+                />
+              )
+          )}
+
           {/* <div className={styles.result}>
             <div dangerouslySetInnerHTML={{ __html: svgCode }}></div>
           </div> */}

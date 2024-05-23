@@ -1,6 +1,7 @@
 import os
 import time
 import chardet
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, UploadFile, File
@@ -10,16 +11,8 @@ from starlette.responses import FileResponse
 from vectorizer.genetic import SVG
 from contour import Contourizer
 
-
 app = FastAPI()
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"], # Allows all origins
-#     allow_credentials=True,
-#     allow_methods=["*"], # Allows all methods
-#     allow_headers=["*"], # Allows all headers
-# )
 
 @app.middleware("http")
 async def add_cors_headers(request, call_next):
@@ -28,9 +21,7 @@ async def add_cors_headers(request, call_next):
     return response
 
 @app.post("/upload")
-async def upload(image: UploadFile = File(...), max_epochs : str='100'):
-    # Save the received image to a file
-    max_epochs = int(max_epochs)
+async def upload(image: UploadFile, max_epochs : int):
     with open("received_image.jpg", "wb") as file:
         file.write(image.file.read())
     contour = Contourizer()
@@ -39,8 +30,19 @@ async def upload(image: UploadFile = File(...), max_epochs : str='100'):
     svg_path = os.path.join(svg.resdir, 'result.svg')
     with open(svg_path, 'r+') as f:
         svg_content = f.read()
-    # Return a different image as the response
-    return {'image': svg_content}
+    return {'image': svg_content, 'resdir': Path(svg.resdir).name}
+
+@app.get('/process_gif/{res_dir}')
+async def process_gif(res_dir: str):
+    return FileResponse(os.path.join('results', res_dir, 'output.gif'), media_type='image/gif')
+
+@app.get('/contour/{res_dir}')
+async def contour(res_dir: str):
+    return FileResponse(os.path.join('results', res_dir, 'contour.png'), media_type='image/png')
+
+# @app.get('/svg_image/{res_dir}')
+# async def contour(res_dir: str):
+#     return FileResponse(os.path.join(res_dir, 'contour.png'))
 
 
 if __name__ == "__main__":
