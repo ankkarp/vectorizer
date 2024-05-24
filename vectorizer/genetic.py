@@ -6,8 +6,9 @@ import shutil
 from typing import Union
 from random import randint
 
+import cv2
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter, ImageOps
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPM
 from tqdm import tqdm
@@ -181,16 +182,25 @@ class SVG:
             seed (int): Ядро рандомизатора чисел. По умолчанию случайное
             n_epochs (int): Кол-во эпох. По умолчанию 1000
         """
-        pil_img = self.contourizer.contour(img, invert=True)
+        pil_img = Image.open(img).convert('L') if type(img) == str else img
+        img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        smoothed_img = cv2.GaussianBlur(img, (5, 5), 0)  # Adjust kernel size for smoothness
+        self.img = cv2.bitwise_not(cv2.Canny(smoothed_img, 100, 200))
+
+        # pil_img = ImageOps.invert(pil_img.convert("L").filter(ImageFilter.FIND_EDGES))
+        # self.img = np.array(pil_img)
+        # self.img[0, :] = 255
+        # self.img[-1, :] = 255
+        # self.img[:, 0] = 255
+        # self.img[:, -1] = 255
         if self.resroot:
-            pil_img.save(os.path.join(self.resdir, f'contour.png'))
-        self.img = np.array(pil_img.convert("L"))
+            Image.fromarray(self.img).save(os.path.join(self.resdir, f'contour.png'))
         self.flat_img = self.img.flatten()
         self.true_curve_idxs = np.where(self.flat_img < 127)[0]
         self.true_curve_idxs_unraveled = np.vstack(np.unravel_index(self.true_curve_idxs, self.img.shape)).T
         self.true_curve_n = len(self.true_curve_idxs)
         self.h, self.w = self.img.shape
-        self.population = [PathAgent(xmax=self.h, ymax=self.w, init_coords=self.true_curve_idxs_unraveled)
+        self.population = [PathAgent(xmax=self.w, ymax=self.h, init_coords=self.true_curve_idxs_unraveled)
                            for _ in range(self.n_agents)]
         self.n_pixels = np.prod(self.img.shape)
         n_agents_halfed = self.n_agents // 2
