@@ -53,16 +53,11 @@ const ResultBlock = ({ svgCode, resDir }) => {
   };
 
   useEffect(() => {
-    console.log(resDir);
+    console.log(Object.entries(resultObjs));
     if (resDir) {
       Object.values(resultObjs).forEach((obj) => {
         try {
-          http.get(obj.endpoint).then((r) => {
-            console.log(typeof r.data);
-            obj.setter(
-              URL.createObjectURL(new Blob([r.data], { type: obj.blobType }))
-            );
-          });
+          http.get(obj.endpoint);
         } catch (e) {
           console.log(e);
         }
@@ -85,102 +80,106 @@ const ResultBlock = ({ svgCode, resDir }) => {
     <div className={styles.container}>
       {svgCode && (
         <>
-          <div className={styles.result}>
-            <TextField
-              id="outlined-basic"
-              label="Изображение в формате SVG"
-              minRows={3}
-              variant="outlined"
-              value={svgCode}
-              multiline
-              disabled
-              fullWidth
-              sx={{
-                // input: {
-                //   color: "var(--text-clr)",
+          <TextField
+            id="outlined-basic"
+            label="Изображение в формате SVG"
+            minRows={3}
+            variant="outlined"
+            value={svgCode}
+            multiline
+            disabled
+            fullWidth
+            sx={{
+              // input: {
+              //   color: "var(--text-clr)",
+              // },
+              "& .MuiFormControl-fullwidth": {
+                "& .MuiTextField-root": {
+                  alignItems: "center",
+                  width: "fit-content",
+                },
+              },
+              "& .MuiInputBase-input.Mui-disabled": {
+                WebkitTextFillColor: "var(--text-clr)", // Example color - choose your own
+                "-webkit-opacity": 1, // Ensure consistent opacity across browsers
+              },
+              "& .MuiInputBase-input": {
+                //   color: "var(--text-clr)", // Ensure the text color is white
+                //   "-webkit-text-fill-color": "var(--text-clr)",
+                paddingRight: "20px",
+              },
+              "& .MuiInputBase-root.Mui-disabled": {
+                // color: "var(--text-clr)",
+                "& fieldset": {
+                  borderColor: "var(--text-clr)",
+                },
+              },
+              "& .MuiOutlinedInput-root": {
+                // "& fieldset": {
+                //   borderColor: "var(--accent-clr)",
                 // },
-                "& .MuiInputBase-input.Mui-disabled": {
-                  WebkitTextFillColor: "var(--text-clr)", // Example color - choose your own
-                  "-webkit-opacity": 1, // Ensure consistent opacity across browsers
+                "&:hover fieldset": {
+                  borderColor: "var(--accent-clr)", // Optional: Set border color to white on hover
                 },
-                "& .MuiInputBase-input": {
-                  //   color: "var(--text-clr)", // Ensure the text color is white
-                  //   "-webkit-text-fill-color": "var(--text-clr)",
-                  paddingRight: "20px",
+                "&.Mui-focused fieldset": {
+                  borderColor: "var(--accent-clr)", // Optional: Set border color to white when focused
                 },
-                "& .MuiInputBase-root.Mui-disabled": {
-                  // color: "var(--text-clr)",
-                  "& fieldset": {
-                    borderColor: "var(--text-clr)",
-                  },
-                },
-                "& .MuiOutlinedInput-root": {
-                  // "& fieldset": {
-                  //   borderColor: "var(--accent-clr)",
-                  // },
-                  "&:hover fieldset": {
-                    borderColor: "var(--accent-clr)", // Optional: Set border color to white on hover
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "var(--accent-clr)", // Optional: Set border color to white when focused
-                  },
-                },
-              }}
-              InputProps={{
-                style: {
-                  color: "var(--text-clr)",
-                  "-webkit-text-fill-color": "var(--text-clr)",
-                  // width: "30vw",
-                },
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Tooltip
-                      title="Copied!"
-                      open={tooltipOpen}
-                      disableHoverListener
-                      disableFocusListener
-                      disableTouchListener
-                      placement="top-start"
-                    >
-                      <IconButton
-                        onClick={handleCopy}
-                        sx={{
-                          position: "absolute",
-                          top: 0,
-                          right: 0,
-                          margin: "10px",
-                        }}
-                      >
-                        <ContentCopy style={{ color: "var(--copy-clr)" }} />
-                      </IconButton>
-                    </Tooltip>
+              },
+            }}
+            InputProps={{
+              style: {
+                color: "var(--text-clr)",
+                "-webkit-text-fill-color": "var(--text-clr)",
+                width: "30vw",
+              },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Tooltip
+                    title="Copied!"
+                    open={tooltipOpen}
+                    disableHoverListener
+                    disableFocusListener
+                    disableTouchListener
+                    placement="top-start"
+                  >
                     <IconButton
-                      onClick={handleSaveAsSVG}
+                      onClick={handleCopy}
                       sx={{
                         position: "absolute",
-                        bottom: 0,
+                        top: 0,
                         right: 0,
                         margin: "10px",
                       }}
                     >
-                      <Save style={{ color: "var(--save-clr)" }} />
+                      <ContentCopy style={{ color: "var(--copy-clr)" }} />
                     </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              InputLabelProps={{
-                style: {
-                  color: "var(--text-clr)",
-                },
-              }}
-            />
-          </div>
-          {Object.entries(resultObjs).forEach(
-            (name, obj) =>
-              obj.valueURL && (
+                  </Tooltip>
+                  <IconButton
+                    onClick={handleSaveAsSVG}
+                    sx={{
+                      position: "absolute",
+                      bottom: 0,
+                      right: 0,
+                      margin: "10px",
+                    }}
+                  >
+                    <Save style={{ color: "var(--save-clr)" }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            InputLabelProps={{
+              style: {
+                color: "var(--text-clr)",
+              },
+            }}
+          />
+          <div className={styles.grid}>
+            <div>
+              <div className={styles.fitted}>
                 <Image
-                  src={obj.valueURL}
-                  alt={name}
+                  src={`${process.env.NEXT_PUBLIC_SERVER_ADDRESS}/process_gif/${resDir}`}
+                  alt="Процесс векторизации"
                   fill={true}
                   style={{
                     objectFit: "cover",
@@ -188,12 +187,25 @@ const ResultBlock = ({ svgCode, resDir }) => {
                     borderRadius: "10%",
                   }}
                 />
-              )
-          )}
-
-          {/* <div className={styles.result}>
-            <div dangerouslySetInnerHTML={{ __html: svgCode }}></div>
-          </div> */}
+              </div>
+              <p>Процесс векторизации</p>
+            </div>
+            <div>
+              <div className={styles.fitted}>
+                <Image
+                  src={`${process.env.NEXT_PUBLIC_SERVER_ADDRESS}/contour/${resDir}`}
+                  alt="Контур"
+                  fill={true}
+                  style={{
+                    objectFit: "cover",
+                    overflow: "hidden",
+                    borderRadius: "10%",
+                  }}
+                />
+              </div>
+              <p>Контур</p>
+            </div>
+          </div>
         </>
       )}
     </div>

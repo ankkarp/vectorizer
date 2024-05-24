@@ -35,6 +35,7 @@ export default function FileInput({ setSvgCode, setResDir }) {
 
   const handleSubmit = () => {
     let formData = new FormData();
+    console.log(typeof file);
     formData.append("image", file);
     try {
       http
