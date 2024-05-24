@@ -31,6 +31,8 @@ export default function FileInput({ setSvgCode, setResDir }) {
   const handleClear = (e) => {
     setFile(null);
     setInputImageURL(null);
+    setSvgCode(null);
+    setResDir(null);
   };
 
   const handleSubmit = () => {
