@@ -13,7 +13,7 @@ from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPM
 from tqdm import tqdm
 
-from contour import Contourizer
+from backend.vectorizer.contour import Contourizer
 
 random.seed()
 

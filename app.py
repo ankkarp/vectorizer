@@ -3,8 +3,8 @@ import os
 import matplotlib
 import gradio as gr
 
-from vectorizer.genetic import SVG
-from contour import Contourizer
+from backend.vectorizer.genetic import SVG
+from backend.vectorizer.contour import Contourizer
 
 os.makedirs('results', exist_ok=True)
 
