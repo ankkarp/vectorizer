@@ -26,10 +26,10 @@ class PathAgent:
         self.ymax = ymax
         self.init_coords = init_coords
         coords_idxs = np.random.choice(np.arange(0, len(init_coords)), size=2, replace=False)
-        self.x0 = init_coords[coords_idxs[0]][0] if x0 is None else x0
-        self.y0 = init_coords[coords_idxs[0]][1] if x0 is None else y0
-        self.x1 = init_coords[coords_idxs[1]][0] if x1 is None else x1
-        self.y1 = init_coords[coords_idxs[1]][1] if x1 is None else y1
+        self.x0 = init_coords[coords_idxs[0]][1] if x0 is None else x0
+        self.y0 = init_coords[coords_idxs[0]][0] if x0 is None else y0
+        self.x1 = init_coords[coords_idxs[1]][1] if x1 is None else x1
+        self.y1 = init_coords[coords_idxs[1]][0] if x1 is None else y1
         self.xc0 = randint(0, xmax) if xc0 is None else xc0
         self.xc1 = randint(0, xmax) if xc1 is None else xc1
         self.yc0 = randint(0, ymax) if yc0 is None else yc0
